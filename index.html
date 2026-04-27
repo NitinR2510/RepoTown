@@ -52,6 +52,8 @@ body{background:#d9ecf6}
 #forrestmsg{position:absolute;top:10px;left:50%;transform:translateX(-50%);opacity:0;background:rgba(253,246,236,.93);border:1.5px solid #c8a46a;border-radius:8px;padding:4px 12px;color:#5c3a1e;font:11px Georgia,serif;white-space:nowrap;transition:opacity .35s ease;pointer-events:none}
 #repos{padding:12px 16px;max-height:220px;overflow-y:auto}
 .rcard{background:#fff8f0;border:1.5px solid #e0c090;border-radius:10px;padding:10px 12px;margin-bottom:8px}
+.rcard.clickable{cursor:pointer;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
+.rcard.clickable:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(68,42,18,.08);border-color:#c8a46a}
 .rname{font:13px Georgia,serif;color:#3a1e08;margin-bottom:3px}
 .rdesc{font-size:11px;color:#8a6a4a;margin-bottom:6px}
 .rmeta{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
@@ -748,7 +750,7 @@ function openModal(house){
   reposList.innerHTML='';
   (house.langRepos||[]).forEach(repo=>{
     const card=document.createElement('div');
-    card.className='rcard';
+    card.className='rcard clickable';
     const lastUpdate=formatTimeAgo(repo.updated_at);
     const badge=languageBadgeStyle(repo.language||'Other');
     card.innerHTML=`
@@ -761,6 +763,9 @@ function openModal(house){
         <span class="rage">${lastUpdate}</span>
       </div>
     `;
+    card.onclick=()=>{
+      if(repo.html_url) window.open(repo.html_url,'_blank','noopener,noreferrer');
+    };
     reposList.appendChild(card);
   });
   bookFalling=false;
