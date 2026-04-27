@@ -148,10 +148,20 @@ let isNight=false;
 let currentRepos=[];
 let currentProfile=null;
 let currentStation=null;
+// Bird notes for the little town cameos:
+// Mango and Peach are the masked lovebird pair. Mango has a pale yellow face
+// and a beak in that rich Alphonso-mango shade, while Peach has a pale pink face
+// with a deeper dusty-pink beak. Cherry is the Lillian's lovebird with a bright
+// red beak, a red-and-yellow face, and green-yellow wings. Forrest is the current
+// red-bellied conure, and Toto is the dearly loved conure who now lives with
+// another family and used to wail "Toto" whenever he wanted attention.
 const FORREST_MESSAGES=[
   'Cherry just knocked off a book from the shelf',
   'Toto is the naughtiest bird',
-  'Oh, when did Forrest enter the house?'
+  'Oh, when did Forrest enter the house?',
+  'Mango and Peach are snuggled up together',
+  'Forrest is staring intently at a wall, as usual',
+  'Toto is taking a nap on top of the bookshelf'
 ];
 
 const dayColors={sky0:'#d7ecf6',sky1:'#edf6fb',sky2:'#fff6e8',ground0:'#86be78',ground1:'#73ab68',ground2:'#5f8d55',sun:'#f7ddb0',clouds:'#ffffff',roads:'#d9c3a3',roadDark:'#b99f86',towerWin:'#fff0c0',hillBase:'#90c58d',hillTop:'#a6d6a0'};
@@ -173,6 +183,7 @@ function getColors(){
   return isNight?nightColors:dayColors;
 }
 
+// Keep the painted world locked to the actual viewport instead of a fixed stage size.
 function resizeCanvas(){
   W=window.innerWidth;
   H=window.innerHeight;
@@ -181,6 +192,7 @@ function resizeCanvas(){
   forrestX=Math.min(Math.max(forrestX,40),W-40);
 }
 
+// Repo cards use soft language pills; this helper centralizes those accents.
 function languageBadgeStyle(language){
   const bgMap={
     'Python':'#f4e1ca','JavaScript':'#f5ecbf','TypeScript':'#dfe8fb','Rust':'#f0d4cd',
@@ -238,6 +250,7 @@ function setRadioStatus(message,show=true){
   status.classList.toggle('show',show&&!!message);
 }
 
+// A tiny distance helper lets the radio button pick a station near the user's coordinates.
 function distanceKm(lat1,lon1,lat2,lon2){
   const toRad=value=>value*Math.PI/180;
   const dLat=toRad(lat2-lat1);
@@ -252,6 +265,8 @@ async function fetchGitHubProfile(username,headers){
   return response.json();
 }
 
+// The radio button is intentionally simple: ask for browser location, find a nearby
+// stream, and reuse the same audio element for play/pause after that first lookup.
 async function startLocalRadio(){
   const radioBtn=document.getElementById('radioBtn');
   const audio=document.getElementById('radioAudio');
@@ -377,6 +392,7 @@ async function fetchGitHubRepos(username,authToken=null){
   }
 }
 
+// Houses are grouped by language so the town feels like neighborhoods instead of one repo per building.
 function generateHouses(repos){
   const langGroups={};
   repos.forEach(repo=>{
@@ -602,6 +618,7 @@ function tower(h,hovered){
   }
 }
 
+// M, P, and C map to Mango, Peach, and Cherry, keeping the sky birds personal.
 function drawBird(type,bx,by,sz){
   if(type==='M'){
     ctx.fillStyle='#f5d060';
@@ -666,6 +683,23 @@ function drawBird(type,bx,by,sz){
   }
 }
 
+// A few extra sky birds keep the scene from feeling too still when no house is hovered.
+function drawAmbientBirds(){
+  const flock=[
+    {type:'M',x:W*0.18,y:H*0.22,size:8,speed:0.55,wobble:6,phase:0.4},
+    {type:'P',x:W*0.32,y:H*0.18,size:7,speed:0.42,wobble:5,phase:1.2},
+    {type:'C',x:W*0.52,y:H*0.2,size:8,speed:0.5,wobble:7,phase:2.1},
+    {type:'M',x:W*0.7,y:H*0.16,size:7,speed:0.48,wobble:4,phase:2.7},
+    {type:'P',x:W*0.82,y:H*0.24,size:8,speed:0.36,wobble:6,phase:3.3}
+  ];
+  flock.forEach(bird=>{
+    const driftX=Math.sin(t*bird.speed+bird.phase)*18;
+    const driftY=Math.cos(t*bird.speed*1.4+bird.phase)*bird.wobble;
+    drawBird(bird.type,bird.x+driftX,bird.y+driftY,bird.size);
+  });
+}
+
+// Forrest is the colorful conure gliding across the skyline while the town idles.
 function forrest(fx,fy){
   const wing=Math.sin(t*8)*0.4;
   ctx.save();
@@ -732,6 +766,7 @@ function render(){
   ground();
   hill();
   roads();
+  drawAmbientBirds();
   HOUSES.forEach((house,index)=>tower(house,hovH===index));
   flowers();
   forrestX+=0.7*forrestDir;
@@ -743,6 +778,7 @@ function render(){
   requestAnimationFrame(render);
 }
 
+// Clicking a house opens the indoor scene and repaints the repo list for that language.
 function openModal(house){
   document.getElementById('modal').classList.add('open');
   document.getElementById('mlangtitle').textContent=house.label+(house.repos?` - ${house.repos} repos`:'');
@@ -918,6 +954,7 @@ function drawRoom(house){
     rctx.fillStyle='rgba(80,130,200,.8)';
     rctx.fillText(house.label,scx+scw/2,scy+sch*.72);
 
+    // The indoor bird cameo is Forrest drifting through the room while the bookshelf animates.
     const frx=rw*.32+Math.sin(roomT*1.5)*25;
     const fry=rh*.46+Math.sin(roomT*2)*10;
     const wing2=Math.sin(roomT*8)*.5;
